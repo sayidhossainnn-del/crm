@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --surface-hover: #f4f3f0;
+  --border: #e8e6e1;
+  --border-strong: #d0cec8;
+  --text-primary: #1a1916;
+  --text-secondary: #6b6860;
+  --text-muted: #a09e99;
+  --accent: #1a1916;
+  --accent-text: #ffffff;
+  --green: #0f6e56;
+  --green-bg: #e1f5ee;
+  --amber: #854f0b;
+  --amber-bg: #faeeda;
+  --red: #a32d2d;
+  --red-bg: #fcebeb;
+  --blue: #185fa5;
+  --blue-bg: #e6f1fb;
+  --purple: #534ab7;
+  --purple-bg: #eeedfe;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, select, textarea {
+  outline: none;
+  font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 3px rgba(26,25,22,0.06);
+}
