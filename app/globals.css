@@ -1,43 +1,121 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f8f7f4;
-  --surface: #ffffff;
-  --surface-hover: #f4f3f0;
-  --border: #e8e6e1;
-  --border-strong: #d0cec8;
-  --text-primary: #1a1916;
-  --text-secondary: #6b6860;
-  --text-muted: #a09e99;
-  --accent: #1a1916;
-  --accent-text: #ffffff;
-  --green: #0f6e56;
-  --green-bg: #e1f5ee;
-  --amber: #854f0b;
-  --amber-bg: #faeeda;
-  --red: #a32d2d;
-  --red-bg: #fcebeb;
-  --blue: #185fa5;
-  --blue-bg: #e6f1fb;
-  --purple: #534ab7;
-  --purple-bg: #eeedfe;
+  /* Dark SaaS palette — deep ink base, single accent hue */
+  --bg: #08090d;
+  --bg-elevated: #0d0f16;
+  --surface: rgba(255, 255, 255, 0.025);
+  --surface-hover: rgba(255, 255, 255, 0.045);
+  --surface-solid: #12141c;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: rgba(255, 255, 255, 0.94);
+  --text-secondary: rgba(255, 255, 255, 0.56);
+  --text-muted: rgba(255, 255, 255, 0.36);
+
+  --accent: #7c8cff;
+  --accent-soft: rgba(124, 140, 255, 0.14);
+  --accent-glow: rgba(124, 140, 255, 0.35);
+
+  --green: #4ade9b;
+  --green-bg: rgba(74, 222, 155, 0.12);
+  --green-border: rgba(74, 222, 155, 0.25);
+
+  --amber: #f5b54c;
+  --amber-bg: rgba(245, 181, 76, 0.12);
+  --amber-border: rgba(245, 181, 76, 0.25);
+
+  --red: #ff6b6b;
+  --red-bg: rgba(255, 107, 107, 0.12);
+  --red-border: rgba(255, 107, 107, 0.25);
+
+  --blue: #6fb8ff;
+  --blue-bg: rgba(111, 184, 255, 0.12);
+
+  --purple: #b794ff;
+  --purple-bg: rgba(183, 148, 255, 0.12);
 }
 
 * { box-sizing: border-box; }
 
+html { color-scheme: dark; }
+
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
 }
 
-input, select, textarea {
-  outline: none;
-  font-family: inherit;
+/* Ambient background mesh — subtle, not loud */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 800px 500px at 15% -5%, rgba(124, 140, 255, 0.10), transparent 60%),
+    radial-gradient(ellipse 700px 600px at 100% 10%, rgba(183, 148, 255, 0.07), transparent 55%),
+    radial-gradient(ellipse 900px 700px at 50% 110%, rgba(74, 222, 155, 0.04), transparent 60%);
+  pointer-events: none;
 }
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 70%);
+}
+
+input, select, textarea { outline: none; font-family: inherit; }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--border-strong) !important;
-  box-shadow: 0 0 0 3px rgba(26,25,22,0.06);
+  border-color: var(--accent-glow) !important;
+  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.12);
+}
+
+::selection { background: var(--accent-glow); color: white; }
+
+/* Glass surface — labeled web approximation, not official Apple Liquid Glass */
+.glass {
+  position: relative;
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 50%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--surface-solid); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
