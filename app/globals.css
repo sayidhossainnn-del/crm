@@ -1,43 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark SaaS palette — deep ink base, single accent hue */
-  --bg: #08090d;
-  --bg-elevated: #0d0f16;
-  --surface: rgba(255, 255, 255, 0.025);
-  --surface-hover: rgba(255, 255, 255, 0.045);
-  --surface-solid: #12141c;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text-primary: rgba(255, 255, 255, 0.94);
-  --text-secondary: rgba(255, 255, 255, 0.56);
-  --text-muted: rgba(255, 255, 255, 0.36);
+  --bg: #08090c;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.055);
+  --surface-solid: #121319;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.58);
+  --text-muted: rgba(255, 255, 255, 0.38);
 
-  --accent: #7c8cff;
-  --accent-soft: rgba(124, 140, 255, 0.14);
-  --accent-glow: rgba(124, 140, 255, 0.35);
+  --accent: #8b93ff;
+  --accent-2: #6a5cff;
+  --accent-soft: rgba(139, 147, 255, 0.14);
+  --accent-glow: rgba(139, 147, 255, 0.45);
 
-  --green: #4ade9b;
-  --green-bg: rgba(74, 222, 155, 0.12);
-  --green-border: rgba(74, 222, 155, 0.25);
+  --green: #4fe0a3;
+  --green-bg: rgba(79, 224, 163, 0.13);
+  --green-border: rgba(79, 224, 163, 0.28);
+  --green-glow: rgba(79, 224, 163, 0.35);
 
-  --amber: #f5b54c;
-  --amber-bg: rgba(245, 181, 76, 0.12);
-  --amber-border: rgba(245, 181, 76, 0.25);
+  --amber: #ffbb5c;
+  --amber-bg: rgba(255, 187, 92, 0.13);
+  --amber-border: rgba(255, 187, 92, 0.28);
 
-  --red: #ff6b6b;
-  --red-bg: rgba(255, 107, 107, 0.12);
-  --red-border: rgba(255, 107, 107, 0.25);
+  --red: #ff7373;
+  --red-bg: rgba(255, 115, 115, 0.13);
+  --red-border: rgba(255, 115, 115, 0.28);
 
   --blue: #6fb8ff;
-  --blue-bg: rgba(111, 184, 255, 0.12);
+  --blue-bg: rgba(111, 184, 255, 0.13);
 
-  --purple: #b794ff;
-  --purple-bg: rgba(183, 148, 255, 0.12);
+  --purple: #c39aff;
+  --purple-bg: rgba(195, 154, 255, 0.13);
 }
 
 * { box-sizing: border-box; }
-
 html { color-scheme: dark; }
 
 body {
@@ -47,18 +46,19 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   position: relative;
+  letter-spacing: -0.01em;
 }
 
-/* Ambient background mesh — subtle, not loud */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 800px 500px at 15% -5%, rgba(124, 140, 255, 0.10), transparent 60%),
-    radial-gradient(ellipse 700px 600px at 100% 10%, rgba(183, 148, 255, 0.07), transparent 55%),
-    radial-gradient(ellipse 900px 700px at 50% 110%, rgba(74, 222, 155, 0.04), transparent 60%);
+    radial-gradient(ellipse 900px 560px at 12% -8%, rgba(139, 147, 255, 0.20), transparent 62%),
+    radial-gradient(ellipse 800px 680px at 105% 8%, rgba(195, 154, 255, 0.14), transparent 58%),
+    radial-gradient(ellipse 1000px 780px at 45% 105%, rgba(79, 224, 163, 0.08), transparent 62%),
+    radial-gradient(ellipse 600px 500px at 80% 60%, rgba(106, 92, 255, 0.10), transparent 55%);
   pointer-events: none;
 }
 
@@ -68,38 +68,45 @@ body::after {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 64px 64px;
+    linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+  background-size: 56px 56px;
   pointer-events: none;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 0%, transparent 72%);
 }
 
 input, select, textarea { outline: none; font-family: inherit; }
-
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent-glow) !important;
-  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(139, 147, 255, 0.14);
 }
-
 ::selection { background: var(--accent-glow); color: white; }
 
-/* Glass surface — labeled web approximation, not official Apple Liquid Glass */
 .glass {
   position: relative;
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
 }
 
 .glass::before {
   content: "";
   position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  pointer-events: none;
+}
+
+.glass::after {
+  content: "";
+  position: absolute;
   inset: 0;
   border-radius: inherit;
   z-index: -1;
-  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 50%);
+  background: linear-gradient(160deg, rgba(255,255,255,0.05), transparent 45%);
   pointer-events: none;
 }
 
@@ -107,10 +114,12 @@ input:focus, select:focus, textarea:focus {
   .glass { background: var(--surface-solid); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
+.glow-ring { box-shadow: 0 0 0 3px var(--surface), 0 0 14px 0 var(--green-glow); }
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

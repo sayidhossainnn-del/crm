@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import {
   MagnifyingGlass, FunnelSimple, Plus, InstagramLogo, Warning,
   CheckCircle, Circle, ArrowSquareOut, PencilSimple, X, CaretDown,
-  Sparkle, ChartLineUp, ArrowClockwise, TrendUp,
+  Sparkle, ChartLineUp, ArrowClockwise, Users, Target, ChatCircleDots, Trophy,
 } from "@phosphor-icons/react";
 
 type Status = "target" | "qualify" | "skip";
@@ -45,19 +45,19 @@ function initials(name: string) {
 }
 
 const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, #7c8cff, #5a6cff)",
-  "linear-gradient(135deg, #b794ff, #9569ff)",
-  "linear-gradient(135deg, #4ade9b, #2fc480)",
-  "linear-gradient(135deg, #f5b54c, #e89a1e)",
+  "linear-gradient(135deg, #8b93ff, #6a5cff)",
+  "linear-gradient(135deg, #c39aff, #a06aff)",
+  "linear-gradient(135deg, #4fe0a3, #2bc482)",
+  "linear-gradient(135deg, #ffbb5c, #f0982a)",
   "linear-gradient(135deg, #6fb8ff, #4a9bff)",
   "linear-gradient(135deg, #ff8aa8, #ff6b8f)",
 ];
 
-function Avatar({ name, index }: { name: string; index: number }) {
+function Avatar({ name, index, glow }: { name: string; index: number; glow?: boolean }) {
   return (
     <div
       style={{ background: AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length] }}
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 shadow-lg"
+      className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 shadow-lg ${glow ? "glow-ring" : ""}`}
     >
       {initials(name)}
     </div>
@@ -72,21 +72,96 @@ function Badge({ label, color, bg }: { label: string; color: string; bg: string 
   );
 }
 
-function StatCard({ label, value, sub, icon, delay }: { label: string; value: number; sub?: string; icon?: React.ReactNode; delay: number }) {
+// Deterministic mock sparkline path derived from a seed number, purely decorative trend texture
+function sparkPath(seed: number) {
+  const pts: number[] = [];
+  let v = 50 + (seed % 20);
+  for (let i = 0; i < 8; i++) {
+    v += ((seed * (i + 3)) % 17) - 7;
+    v = Math.max(15, Math.min(85, v));
+    pts.push(v);
+  }
+  const w = 100, h = 32, step = w / (pts.length - 1);
+  return pts.map((p, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(h - (p / 100) * h).toFixed(1)}`).join(" ");
+}
+
+function Sparkline({ seed, color }: { seed: number; color: string }) {
+  const d = sparkPath(seed);
+  return (
+    <svg viewBox="0 0 100 32" width="72" height="24" fill="none" preserveAspectRatio="none">
+      <path d={d} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+    </svg>
+  );
+}
+
+function StatCard({ label, value, sub, icon, iconBg, iconColor, sparkSeed, sparkColor, delay }: {
+  label: string; value: number; sub?: string; icon: React.ReactNode; iconBg: string; iconColor: string;
+  sparkSeed: number; sparkColor: string; delay: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="glass rounded-2xl p-5 relative overflow-hidden"
+      className="glass rounded-2xl p-5"
     >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs uppercase tracking-wider font-medium" style={{ color: "var(--text-muted)" }}>{label}</p>
-        {icon}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: iconBg, color: iconColor }}>
+            {icon}
+          </div>
+          <p className="text-xs uppercase tracking-wider font-medium" style={{ color: "var(--text-muted)" }}>{label}</p>
+        </div>
       </div>
-      <p className="text-4xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>{value}</p>
-      {sub && <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>{sub}</p>}
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <p className="text-4xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>{value}</p>
+          {sub && <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{sub}</p>}
+        </div>
+        <Sparkline seed={sparkSeed} color={sparkColor} />
+      </div>
     </motion.div>
+  );
+}
+
+// Donut ring showing target / qualify / skip proportions
+function PipelineDonut({ targets, qualify, skipped }: { targets: number; qualify: number; skipped: number }) {
+  const total = targets + qualify + skipped || 1;
+  const r = 42, cx = 50, cy = 50, circ = 2 * Math.PI * r;
+  const segs = [
+    { v: targets, color: "#4fe0a3" },
+    { v: qualify, color: "#ffbb5c" },
+    { v: skipped, color: "rgba(255,255,255,0.14)" },
+  ];
+  let offset = 0;
+  return (
+    <div className="relative flex-shrink-0" style={{ width: 108, height: 108 }}>
+      <svg viewBox="0 0 100 100" width="108" height="108" style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="11" />
+        {segs.map((s, i) => {
+          const frac = s.v / total;
+          const dash = frac * circ;
+          const el = (
+            <circle
+              key={i}
+              cx={cx} cy={cy} r={r}
+              fill="none"
+              stroke={s.color}
+              strokeWidth="11"
+              strokeDasharray={`${dash} ${circ - dash}`}
+              strokeDashoffset={-offset}
+              strokeLinecap="round"
+            />
+          );
+          offset += dash;
+          return el;
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>{total}</p>
+        <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>total</p>
+      </div>
+    </div>
   );
 }
 
@@ -127,6 +202,7 @@ export default function CRM() {
     total: prospects.length,
     targets: prospects.filter((p) => p.status === "target").length,
     qualify: prospects.filter((p) => p.status === "qualify").length,
+    skip: prospects.filter((p) => p.status === "skip").length,
     active: prospects.filter((p) => ["contacted", "replied", "call"].includes(p.outreach)).length,
     closed: prospects.filter((p) => p.outreach === "closed").length,
   }), [prospects]);
@@ -167,13 +243,12 @@ export default function CRM() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="sticky top-0 z-30 glass" style={{ borderLeft: "none", borderRight: "none", borderTop: "none" }}>
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center relative"
-              style={{ background: "linear-gradient(135deg, var(--accent), #5a6cff)", boxShadow: "0 4px 20px rgba(124,140,255,0.35)" }}
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))", boxShadow: "0 4px 20px rgba(139,147,255,0.4)" }}
             >
               <Sparkle weight="fill" size={17} color="white" />
             </div>
@@ -189,7 +264,7 @@ export default function CRM() {
             <button
               onClick={openAdd}
               className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, var(--accent), #5a6cff)", color: "white", boxShadow: "0 4px 16px rgba(124,140,255,0.3)" }}
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))", color: "white", boxShadow: "0 4px 20px rgba(139,147,255,0.4)" }}
             >
               <Plus size={15} weight="bold" />
               Add prospect
@@ -199,40 +274,44 @@ export default function CRM() {
       </div>
 
       <div className="max-w-4xl mx-auto px-5 py-7 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard label="Total" value={stats.total} delay={0} icon={<ChartLineUp size={15} style={{ color: "var(--text-muted)" }} />} />
-          <StatCard label="Targets" value={stats.targets} sub="confirmed" delay={0.05} icon={<TrendUp size={15} style={{ color: "var(--green)" }} />} />
-          <StatCard label="Active" value={stats.active} sub="in conversation" delay={0.1} />
-          <StatCard label="Closed" value={stats.closed} sub="clients won" delay={0.15} />
+          <StatCard label="Total" value={stats.total} icon={<Users size={15} weight="bold" />} iconBg="rgba(139,147,255,0.16)" iconColor="var(--accent)" sparkSeed={11} sparkColor="var(--accent)" delay={0} />
+          <StatCard label="Targets" value={stats.targets} sub="confirmed" icon={<Target size={15} weight="bold" />} iconBg="var(--green-bg)" iconColor="var(--green)" sparkSeed={23} sparkColor="var(--green)" delay={0.05} />
+          <StatCard label="Active" value={stats.active} sub="in conversation" icon={<ChatCircleDots size={15} weight="bold" />} iconBg="var(--blue-bg)" iconColor="var(--blue)" sparkSeed={7} sparkColor="var(--blue)" delay={0.1} />
+          <StatCard label="Closed" value={stats.closed} sub="clients won" icon={<Trophy size={15} weight="bold" />} iconBg="var(--amber-bg)" iconColor="var(--amber)" sparkSeed={31} sparkColor="var(--amber)" delay={0.15} />
         </div>
 
-        {/* Pipeline bar */}
+        {/* Pipeline — donut + breakdown rows */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="glass rounded-2xl p-5 space-y-3"
+          className="glass rounded-2xl p-5"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-4">
             <ChartLineUp size={14} style={{ color: "var(--text-muted)" }} />
             <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Pipeline</span>
           </div>
-          <div className="flex gap-1 h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.04)" }}>
-            {stats.targets > 0 && (
-              <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                style={{ flex: stats.targets, background: "linear-gradient(90deg, var(--green), #2fc480)", transformOrigin: "left", borderRadius: 9999 }} />
-            )}
-            {stats.qualify > 0 && (
-              <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                style={{ flex: stats.qualify, background: "linear-gradient(90deg, var(--amber), #e89a1e)", transformOrigin: "left", borderRadius: 9999 }} />
-            )}
-            {(stats.total - stats.targets - stats.qualify) > 0 && (
-              <div style={{ flex: stats.total - stats.targets - stats.qualify, background: "rgba(255,255,255,0.08)", borderRadius: 9999 }} />
-            )}
-          </div>
-          <div className="flex gap-5 text-xs" style={{ color: "var(--text-secondary)" }}>
-            <span><span className="font-semibold" style={{ color: "var(--green)" }}>{stats.targets}</span> targets</span>
-            <span><span className="font-semibold" style={{ color: "var(--amber)" }}>{stats.qualify}</span> to qualify</span>
-            <span><span className="font-semibold" style={{ color: "var(--text-muted)" }}>{stats.total - stats.targets - stats.qualify}</span> skipped</span>
+          <div className="flex items-center gap-6">
+            <PipelineDonut targets={stats.targets} qualify={stats.qualify} skipped={stats.skip} />
+            <div className="flex-1 space-y-3">
+              {[
+                { label: "Confirmed targets", val: stats.targets, color: "#4fe0a3" },
+                { label: "To qualify", val: stats.qualify, color: "#ffbb5c" },
+                { label: "Skipped", val: stats.skip, color: "rgba(255,255,255,0.3)" },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: row.color }} />
+                  <span className="text-xs flex-1" style={{ color: "var(--text-secondary)" }}>{row.label}</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden max-w-24" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <motion.div
+                      initial={{ scaleX: 0 }} animate={{ scaleX: stats.total ? row.val / stats.total : 0 }}
+                      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ height: "100%", background: row.color, transformOrigin: "left", borderRadius: 9999 }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium w-5 text-right" style={{ color: "var(--text-primary)" }}>{row.val}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
 
@@ -260,12 +339,9 @@ export default function CRM() {
           </div>
         </div>
 
-        {/* Prospect list */}
         {loading ? (
           <div className="space-y-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="glass rounded-2xl p-4 h-16 animate-pulse" />
-            ))}
+            {[0, 1, 2].map((i) => <div key={i} className="glass rounded-2xl p-4 h-16 animate-pulse" />)}
           </div>
         ) : (
           <div className="space-y-2">
@@ -289,7 +365,7 @@ export default function CRM() {
                     style={{ borderColor: isOpen ? "var(--border-strong)" : "var(--border)" }}
                   >
                     <div className="flex items-center gap-3 p-4 cursor-pointer select-none" onClick={() => toggle(p.id)}>
-                      <Avatar name={p.name} index={i} />
+                      <Avatar name={p.name} index={i} glow={p.status === "target"} />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate" style={{ color: "var(--text-primary)" }}>{p.name}</p>
                         <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
@@ -361,7 +437,7 @@ export default function CRM() {
                               {p.status === "target" && p.outreach === "pending" && (
                                 <button
                                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium ml-auto transition-transform hover:scale-[1.03]"
-                                  style={{ background: "linear-gradient(135deg, var(--accent), #5a6cff)", color: "white" }}
+                                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))", color: "white", boxShadow: "0 2px 12px rgba(139,147,255,0.35)" }}
                                   onClick={() => {
                                     const msg = `Write a cold Instagram DM for ${p.name}. Their creative problem: ${p.problem || "creative fatigue on Meta ads"}. Short, specific, not salesy. End with a soft yes/no question.`;
                                     window.open(`https://claude.ai/new?q=${encodeURIComponent(msg)}`, "_blank");
@@ -406,7 +482,6 @@ export default function CRM() {
         )}
       </div>
 
-      {/* Modal */}
       <AnimatePresence>
         {modal && (
           <motion.div
@@ -455,7 +530,7 @@ export default function CRM() {
               </div>
               <div className="flex gap-2 pt-2">
                 <button onClick={() => setModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5" style={{ border: "1px solid var(--border-strong)", color: "var(--text-secondary)" }}>Cancel</button>
-                <button onClick={save} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-transform hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, var(--accent), #5a6cff)", color: "white", opacity: saving ? 0.6 : 1 }}>
+                <button onClick={save} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-transform hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))", color: "white", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Saving…" : editId ? "Save changes" : "Add prospect"}
                 </button>
               </div>
